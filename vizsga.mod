@@ -12,9 +12,7 @@ param kredit {Targyak};
 # Variables
 
 var tanul {Targyak, Napok} binary;
-var nemTanul {Targyak, Napok} binary;
 var vizsgazik {Napok, Targyak} binary;
-var nemTanulLevizsgazott {Targyak, Napok} binary;
 var tanultOrak {Targyak} >=0;
 var kapottJegy {Targyak} >=0 integer <=5;
 var atlag >=0;
@@ -24,61 +22,59 @@ var atlag >=0;
 
 # Csak vizsganapon lehet vizsgazni
 s.t. Vizsganap {t in Targyak, n in Napok}:
-	vizsgazik[n,t] <= 1 - 1*(1-vizsgak[n,t]);
+	vizsgazik[n,t] <= vizsgak[n,t];
 
-# Egy tárgyból legfeljebb egyszer vizsgázom
+# Egy tÃ¡rgybÃ³l egyszer vizsgÃ¡zom
 s.t. EgyVizsga {t in Targyak}:
-	sum {n in Napok}vizsgazik[n,t]=1;
+	sum {n in Napok}vizsgazik[n,t] = 1;
 
-# Miután vizsgáztam, a többi napon már nem tanulok az adott tárgyból
-s.t. VizsgaUtanNemTanulokATargybol {t in Targyak, n in 2..49}:
-	nemTanulLevizsgazott[t,n]>=vizsgazik[n-1,t];
-s.t. NemTanulVizsgaUtan2 {t in Targyak, n in 2..49}:
-	nemTanulLevizsgazott[t,n]>=nemTanulLevizsgazott[t,n-1];
+# MiutÃ¡n vizsgÃ¡ztam, a tÃ¶bbi napon mÃ¡r nem tanulok az adott tÃ¡rgybÃ³l
+s.t. VizsgaUtanNemTanulokATargybol {t in Targyak, n in Napok, n1 in Napok : n1 > n}:
+	tanul[t,n1] <= 1-vizsgazik[n,t];
 
-# Egy nap csak egy tárgyból készülök, vagy vizsgázom
+# Egy nap csak egy tÃ¡rgybÃ³l kÃ©szÃ¼lÃ¶k, vagy vizsgÃ¡zom
 s.t. EgyNapEgyTargybolTanulasVagyVizsga {n in Napok, t in Targyak}:
-	tanul[t,n]+vizsgazik[n,t]+nemTanulLevizsgazott[t,n]+nemTanul[t,n] = 1;
+	tanul[t,n]+vizsgazik[n,t] <= 1;
 
 # Minden nap, vagy tanulok, vagy vizsgazom
 s.t. MindenNapCsinalokValamit {n in Napok}:
 	sum {t in Targyak} (tanul[t,n]+vizsgazik[n,t]) <= 1;
 
-# Egy tárgyat max 2 egymást követõ napon tanulok
-s.t. Valtozatossag {t in Targyak, n in 3..49}:
-	tanul[t,n] <= 0 + 1*(2-tanul[t,n-1]-tanul[t,n-2]);
+# Egy tÃ¡rgyat max 2 egymÃ¡st kÃ¶vetÅ‘ napon tanulok
+s.t. Valtozatossag {t in Targyak, n in Napok : n>=3}:
+	tanul[t,n]+tanul[t,n-1]+tanul[t,n-2] <= 2;
 
-# Ha vizsgázok, akkor az nap nem tanulok (lehet nem kell az elsõ miatt)
+# Ha vizsgÃ¡zok, akkor az nap nem tanulok (lehet nem kell az elsÅ‘ miatt)
 s.t. HaVizsgazomNemTanulok {t in Targyak, n in Napok}:
-	tanul[t,n] <= 0 + 1*(1-vizsgazik[n,t]);
+	tanul[t,n] <= 1-vizsgazik[n,t];
 
-# Tanult órák
+# Tanult Ã³rÃ¡k
 s.t. TanultOrak {t in Targyak}:
 	tanultOrak[t] = sum {n in Napok} tanul[t,n]*szabadIdo[n];
 
-# Milyen jegyet kapok a vizsgán, a tanult órák alapján
+# Milyen jegyet kapok a vizsgÃ¡n, a tanult Ã³rÃ¡k alapjÃ¡n
 s.t. KapottJegy {t in Targyak}:
 	kapottJegy[t] <= tanultOrak[t]/tanulasIdo[t];
 
-# Átlag (jegy*kredit/ossz kredit)
+# Ãtlag (jegy*kredit/ossz kredit)
 s.t. AtlagKiszamolas:
 	atlag = (sum {t in Targyak} kapottJegy[t]*kredit[t])/(sum {t in Targyak}kredit[t]);
 
 
 # Objective
 
-# Minél jobb átlag elérése
+# MinÃ©l jobb Ã¡tlag elÃ©rÃ©se
 maximize Atlag:
 		atlag;
 
 solve;
 
-printf "\nVizsgaidõszak:\n---------------------------\n";
-printf "Átlag: %.3f\n\n",atlag;
+printf "\nVizsgaidÅ‘szak:\n---------------------------\n";
+printf "Ãtlag: %.3f\n\n",atlag;
 printf "Jegyek:\n";
 for {t in Targyak: kapottJegy[t]>=0}
 {
-	printf "%s: %d (%.2f tanult óra)\n",t,kapottJegy[t], tanultOrak[t];
+	printf "%s: %d (%.2f tanult Ã³ra)\n",t,kapottJegy[t], tanultOrak[t];
 }
 
 printf "\n";
