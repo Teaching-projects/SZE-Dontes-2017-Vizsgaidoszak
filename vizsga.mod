@@ -1,7 +1,8 @@
 # Data
 
 set Targyak;
-set Napok:= 1..49;
+param napokSzama;
+set Napok:= 1..napokSzama;
 
 param szabadIdo {Napok};
 param tanulasIdo {Targyak};
@@ -24,15 +25,15 @@ var atlag >=0;
 s.t. Vizsganap {t in Targyak, n in Napok}:
 	vizsgazik[n,t] <= vizsgak[n,t];
 
-# Egy tárgyból egyszer vizsgázom
+# Egy targybol egyszer vizsgazom
 s.t. EgyVizsga {t in Targyak}:
 	sum {n in Napok}vizsgazik[n,t] = 1;
 
-# Miután vizsgáztam, a többi napon már nem tanulok az adott tárgyból
-s.t. VizsgaUtanNemTanulokATargybol {t in Targyak, n in Napok, n1 in Napok : n1 > n}:
+# Miutan vizsgaztam, a tobbi napon mar nem tanulok az adott targybol
+s.t. VizsgaUtanNemTanulokATargybol {t in Targyak, n in Napok, n1 in Napok : n1 >= n}:
 	tanul[t,n1] <= 1-vizsgazik[n,t];
 
-# Egy nap csak egy tárgyból készülök, vagy vizsgázom
+# Egy nap csak egy targybol keszulok, vagy vizsgazom
 s.t. EgyNapEgyTargybolTanulasVagyVizsga {n in Napok, t in Targyak}:
 	tanul[t,n]+vizsgazik[n,t] <= 1;
 
@@ -40,41 +41,41 @@ s.t. EgyNapEgyTargybolTanulasVagyVizsga {n in Napok, t in Targyak}:
 s.t. MindenNapCsinalokValamit {n in Napok}:
 	sum {t in Targyak} (tanul[t,n]+vizsgazik[n,t]) <= 1;
 
-# Egy tárgyat max 2 egymást követő napon tanulok
+# Egy targyat max 2 egymast koveto napon tanulok
 s.t. Valtozatossag {t in Targyak, n in Napok : n>=3}:
 	tanul[t,n]+tanul[t,n-1]+tanul[t,n-2] <= 2;
 
-# Ha vizsgázok, akkor az nap nem tanulok (lehet nem kell az első miatt)
+# Ha vizsgazok, akkor az nap nem tanulok (lehet nem kell az elso miatt)
 s.t. HaVizsgazomNemTanulok {t in Targyak, n in Napok}:
 	tanul[t,n] <= 1-vizsgazik[n,t];
 
-# Tanult órák
+# Tanult orak
 s.t. TanultOrak {t in Targyak}:
 	tanultOrak[t] = sum {n in Napok} tanul[t,n]*szabadIdo[n];
 
-# Milyen jegyet kapok a vizsgán, a tanult órák alapján
+# Milyen jegyet kapok a vizsgan, a tanult orak alapjan
 s.t. KapottJegy {t in Targyak}:
 	kapottJegy[t] <= tanultOrak[t]/tanulasIdo[t];
 
-# Átlag (jegy*kredit/ossz kredit)
+# Atlag (jegy*kredit/ossz kredit)
 s.t. AtlagKiszamolas:
 	atlag = (sum {t in Targyak} kapottJegy[t]*kredit[t])/(sum {t in Targyak}kredit[t]);
 
 
 # Objective
 
-# Minél jobb átlag elérése
+# Minel jobb atlag elerese
 maximize Atlag:
 		atlag;
 
 solve;
 
-printf "\nVizsgaidőszak:\n---------------------------\n";
-printf "Átlag: %.3f\n\n",atlag;
+printf "\nVizsgaidoszak:\n---------------------------\n";
+printf "Atlag: %.3f\n\n",atlag;
 printf "Jegyek:\n";
 for {t in Targyak: kapottJegy[t]>=0}
 {
-	printf "%s: %d (%.2f tanult óra)\n",t,kapottJegy[t], tanultOrak[t];
+	printf "%s: %d (%.2f tanult ora)\n",t,kapottJegy[t], tanultOrak[t];
 }
 
 printf "\n";
@@ -90,5 +91,3 @@ for {n in Napok}
 		printf "Vizsgazik: %s\n",t;
 	}
 }
-
-
