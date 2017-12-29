@@ -1,4 +1,5 @@
 set Targyak:= matek prog jog info szoftver;
+param napokSzama:= 49;
 
 param szabadIdo:=
 		1	6.2
@@ -54,10 +55,10 @@ param szabadIdo:=
 
 param tanulasIdo:=
 			matek 	 10
-			prog	 8
-			jog		 7
+			prog	 9
+			jog		 8
 			info	 9
-			szoftver 10
+			szoftver 11
 			;
 
 
@@ -114,7 +115,7 @@ param vizsgak: matek prog jog info szoftver:=
 			 ;
 
 param kredit:=
-		matek	 4
+		matek	 5
 		prog	 3
 		jog		 2
 		info	 4
